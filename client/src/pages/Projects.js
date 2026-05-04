@@ -14,6 +14,9 @@ import {
   Trash2,
   Eye,
   UserPlus,
+  ArrowUp,
+  Activity,
+  Target,
 } from 'lucide-react';
 import { projectService } from '../services/projectService';
 import { useAuth } from '../context/AuthContext';
@@ -88,96 +91,99 @@ const Projects = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="p-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Projects</h1>
-          <p className="text-gray-600 mt-1">Manage your projects and collaborate with your team</p>
+      <header className="bg-white/80 backdrop-blur-lg shadow-lg border-b border-gray-100 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-6">
+            <div className="group">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent transition-all duration-300 group-hover:from-blue-700 group-hover:to-indigo-700">
+                Projects
+              </h1>
+              <p className="text-gray-600 mt-2 text-lg font-medium">Manage your projects and track progress across your team</p>
+            </div>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="btn-primary flex items-center shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              New Project
+            </button>
+          </div>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="btn-primary flex items-center"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          New Project
-        </button>
-      </div>
-
-      {/* Filters */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search projects..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="input pl-10"
-              />
+      </header>
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-6">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search projects..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="input pl-10"
+                />
+              </div>
+            </div>
+            <div className="sm:w-48">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="input"
+              >
+                <option value="">All Status</option>
+                <option value="planning">Planning</option>
+                <option value="active">Active</option>
+                <option value="completed">Completed</option>
+                <option value="on-hold">On Hold</option>
+              </select>
             </div>
           </div>
-          <div className="sm:w-48">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="input"
+        </div>
+        {projects.length === 0 ? (
+          <div className="text-center py-12">
+            <Briefcase className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No projects found</h3>
+            <p className="text-gray-600 mb-4">Get started by creating your first project</p>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="btn-primary"
             >
-              <option value="">All Status</option>
-              <option value="planning">Planning</option>
-              <option value="active">Active</option>
-              <option value="completed">Completed</option>
-              <option value="on-hold">On Hold</option>
-            </select>
+              Create Project
+            </button>
           </div>
-        </div>
-      </div>
-
-      {/* Projects Grid */}
-      {projects.length === 0 ? (
-        <div className="text-center py-12">
-          <Briefcase className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No projects found</h3>
-          <p className="text-gray-600 mb-4">Get started by creating your first project</p>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="btn-primary"
-          >
-            Create Project
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map((project) => (
-            <div key={project._id} className="card hover:shadow-md transition-shadow">
-              <div className="card-header">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 mb-1">{project.name}</h3>
-                    <p className="text-sm text-gray-600 line-clamp-2">{project.description || 'No description'}</p>
-                  </div>
-                  <div className="relative">
-                    <button className="p-1 hover:bg-gray-100 rounded">
-                      <MoreVertical className="h-4 w-4 text-gray-500" />
-                    </button>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {projects.map((project, index) => (
+              <div key={project._id} className="group relative overflow-hidden bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100" style={{ animationDelay: `${index * 100}ms` }}>
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="card-header relative">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <h3 className="font-bold text-gray-900 mb-2 text-lg group-hover:text-blue-600 transition-colors duration-200">{project.name}</h3>
+                      <p className="text-sm text-gray-600 line-clamp-3 leading-relaxed">{project.description || 'No description'}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
               <div className="card-body">
                 <div className="flex items-center justify-between mb-4">
-                  <span className={`badge ${getStatusColor(project.status)}`}>
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(project.status)}`}>
                     {project.status}
                   </span>
-                  <span className={`text-sm font-medium ${getPriorityColor(project.priority)}`}>
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                    project.priority === 'urgent' ? 'bg-red-100 text-red-700' :
+                    project.priority === 'high' ? 'bg-orange-100 text-orange-700' :
+                    project.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                    'bg-green-100 text-green-700'
+                  }`}>
                     {project.priority}
                   </span>
                 </div>
@@ -187,11 +193,14 @@ const Projects = () => {
                     <span className="text-gray-600">Progress</span>
                     <span className="font-medium">{project.progress}%</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="relative w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                     <div
-                      className="bg-primary-600 h-2 rounded-full transition-all"
+                      className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full transition-all duration-500"
                       style={{ width: `${project.progress}%` }}
                     ></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-xs font-bold text-gray-700">{project.progress}%</span>
+                    </div>
                   </div>
 
                   <div className="flex items-center justify-between text-sm text-gray-600">
@@ -208,24 +217,24 @@ const Projects = () => {
                   </div>
                 </div>
 
-                <div className="flex gap-2 mt-4">
+                <div className="flex gap-2 mt-6">
                   <Link
                     to={`/projects/${project._id}`}
-                    className="btn-secondary flex-1 text-sm"
+                    className="btn-secondary flex-1 text-sm shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
                   >
                     <Eye className="h-4 w-4 mr-1" />
                     View
                   </Link>
                   <button
                     onClick={() => setEditingProject(project)}
-                    className="btn-secondary text-sm"
+                    className="btn-secondary text-sm shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
                   >
                     <Edit className="h-4 w-4" />
                   </button>
                   {project.owner?._id === user?.id && (
                     <button
                       onClick={() => handleDeleteProject(project._id)}
-                      className="text-red-600 hover:text-red-700 p-2"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-all duration-200"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>

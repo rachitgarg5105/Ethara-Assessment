@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { findUserByEmail } = require('../mock-auth');
+const { findUserById } = require('../mock-auth');
 
 // Protect routes - verify JWT token
 const protect = async (req, res, next) => {
@@ -19,21 +19,18 @@ const protect = async (req, res, next) => {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    // For mock authentication, we'll create a mock user object
-    // In a real app, you would find the user in the database
-    const mockUser = {
-      _id: decoded.id,
-      name: 'Demo Admin',
-      email: 'admin@demo.com',
-      role: 'admin',
-      isActive: true
-    };
+    // Find user in mock database
+    const user = await findUserById(decoded.id);
     
-    if (!mockUser.isActive) {
+    if (!user) {
+      return res.status(401).json({ message: 'User not found.' });
+    }
+    
+    if (!user.isActive) {
       return res.status(401).json({ message: 'Account is deactivated.' });
     }
 
-    req.user = mockUser;
+    req.user = user;
     next();
   } catch (error) {
     return res.status(401).json({ message: 'Invalid token.' });

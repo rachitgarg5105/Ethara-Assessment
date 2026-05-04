@@ -1,7 +1,7 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { protect, generateToken } = require('../middleware/auth');
-const { findUserByEmail, createUser } = require('../mock-auth');
+const { findUserByEmail, findUserById, createUser, updateUser } = require('../mock-auth');
 
 const router = express.Router();
 
@@ -106,11 +106,15 @@ router.post('/login', [
 // Get current user (protected route)
 router.get('/me', protect, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).populate('joinedProjects', 'name status progress');
+    const user = await findUserById(req.user._id);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
     
     res.json({
       success: true,
-      user
+      user: user.toJSON()
     });
   } catch (error) {
     console.error('Get user error:', error);
@@ -136,22 +140,22 @@ router.put('/profile', protect, [
     if (name) updateData.name = name;
     if (email) {
       // Check if email is already taken by another user
-      const existingUser = await User.findOne({ email, _id: { $ne: req.user.id } });
-      if (existingUser) {
+      const existingUser = await findUserByEmail(email);
+      if (existingUser && existingUser._id !== req.user._id) {
         return res.status(400).json({ message: 'Email is already taken' });
       }
       updateData.email = email;
     }
 
-    const user = await User.findByIdAndUpdate(
-      req.user.id,
-      updateData,
-      { new: true, runValidators: true }
-    );
+    const user = await updateUser(req.user._id, updateData);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
 
     res.json({
       success: true,
-      user
+      user: user.toJSON()
     });
   } catch (error) {
     console.error('Profile update error:', error);
@@ -174,18 +178,19 @@ router.put('/password', protect, [
     const { currentPassword, newPassword } = req.body;
 
     // Get user with password
-    const user = await User.findById(req.user.id).select('+password');
+    const user = await findUserById(req.user._id);
 
-    // Check if current password matches
-    const isMatch = await user.comparePassword(currentPassword);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
 
-    if (!isMatch) {
+    // Check if current password matches (simple comparison for demo)
+    if (user.password !== currentPassword) {
       return res.status(400).json({ message: 'Current password is incorrect' });
     }
 
     // Update password
-    user.password = newPassword;
-    await user.save();
+    await updateUser(req.user._id, { password: newPassword });
 
     res.json({
       success: true,

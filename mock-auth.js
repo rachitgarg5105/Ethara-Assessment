@@ -21,6 +21,18 @@ const findUserByEmail = async (email) => {
   return users.find(user => user.email === email) || null;
 };
 
+const findUserById = async (id) => {
+  return users.find(user => user._id === id) || null;
+};
+
+const updateUser = async (id, updateData) => {
+  const index = users.findIndex(user => user._id === id);
+  if (index === -1) return null;
+  
+  users[index] = { ...users[index], ...updateData };
+  return users[index];
+};
+
 const createUser = async (userData) => {
   const newUser = {
     _id: Date.now().toString(),
@@ -41,5 +53,7 @@ const createUser = async (userData) => {
 module.exports = {
   users,
   findUserByEmail,
-  createUser
+  findUserById,
+  createUser,
+  updateUser
 };
